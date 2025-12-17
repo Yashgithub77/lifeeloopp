@@ -237,10 +237,54 @@ export default function Chatbot({ tasks, goals, onCreateTask, onCompleteTask, on
         setInput("");
         setIsProcessing(true);
 
-        // Simulate processing delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Check if it's a specific command
+        const lowerText = messageText.toLowerCase();
+        const isCommand =
+            lowerText.includes("what tasks") ||
+            lowerText.includes("progress") ||
+            lowerText.includes("create") ||
+            lowerText.includes("add") ||
+            lowerText.includes("complete") ||
+            lowerText.includes("done") ||
+            lowerText.includes("replan") ||
+            (lowerText.includes("goal") && !lowerText.includes("how") && !lowerText.includes("why"));
 
-        const response = processCommand(messageText);
+        let response: string;
+
+        if (isCommand) {
+            // Use rule-based processing for commands
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            response = processCommand(messageText);
+        } else {
+            // Use AI for general questions
+            try {
+                const res = await fetch("/api/ai-chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        message: messageText,
+                        tasks,
+                        goals,
+                    }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.response) {
+                    response = data.isAI
+                        ? `🤖 ${data.response}`
+                        : data.response;
+                } else {
+                    // Fallback to rule-based
+                    response = processCommand(messageText);
+                }
+            } catch (error) {
+                console.error("AI chat error:", error);
+                // Fallback to rule-based
+                response = processCommand(messageText);
+            }
+        }
+
         addMessage("assistant", response);
         setIsProcessing(false);
     };

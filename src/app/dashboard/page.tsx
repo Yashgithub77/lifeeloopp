@@ -16,6 +16,7 @@ import ThemeSelector from "@/components/ThemeSelector";
 import GoogleIntegration from "@/components/GoogleIntegration";
 import CalendarSync from "@/components/CalendarSync";
 import { useCalendarAutoSync } from "@/hooks/useCalendarAutoSync";
+import AIInsights from "@/components/AIInsights";
 
 interface DashboardData {
     goals: Goal[];
@@ -455,6 +456,13 @@ export default function DashboardPage() {
 
                     {/* Right Column */}
                     <div className="lg:col-span-4 space-y-6">
+                        {/* AI Daily Insights */}
+                        <AIInsights
+                            tasks={data.tasks}
+                            goals={data.goals}
+                            fitnessData={data.todayFitness}
+                        />
+
                         {/* Calendar Sync */}
                         <CalendarSync onSyncComplete={fetchData} />
 
