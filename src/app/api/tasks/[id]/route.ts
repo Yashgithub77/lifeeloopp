@@ -45,13 +45,10 @@ export async function PATCH(
                     t => t.goalId === task.goalId && t.status === "done"
                 ).length;
 
-                const updatedGoal = {
-                    ...goal,
+                // Update the goal's currentValue
+                store.updateGoal(goal.id, {
                     currentValue: completedTasksCount,
-                };
-
-                const updatedGoals = goals.map(g => g.id === goal.id ? updatedGoal : g);
-                store.goals = updatedGoals;
+                });
             }
         }
 
@@ -62,8 +59,7 @@ export async function PATCH(
             title: status === "done" ? "Task Completed" : "Task Updated",
             description: `Task "${task.title}" marked as ${status}`,
             status: "completed",
-            progress: 100,
-            createdAt: new Date().toISOString(),
+            timestamp: new Date().toISOString(),
             duration: 100,
         });
 
