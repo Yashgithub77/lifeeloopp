@@ -6,7 +6,7 @@ import { ReactNode } from "react";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
     return (
-        <SessionProvider>
+        <SessionProvider basePath="/api/auth">
             <ThemeProvider>{children}</ThemeProvider>
         </SessionProvider>
     );

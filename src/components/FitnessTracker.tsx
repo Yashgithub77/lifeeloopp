@@ -1,13 +1,17 @@
 "use client";
 
 import { FitnessData } from "@/types";
+import { useState } from "react";
 
 interface FitnessTrackerProps {
     data: FitnessData | null;
     onUpdateSteps?: (steps: number) => void;
+    onSyncGoogleFit?: () => Promise<void>;
 }
 
-export default function FitnessTracker({ data, onUpdateSteps }: FitnessTrackerProps) {
+export default function FitnessTracker({ data, onUpdateSteps, onSyncGoogleFit }: FitnessTrackerProps) {
+    const [isSyncing, setIsSyncing] = useState(false);
+
     // Default values - merge with data if exists to handle partial objects
     const defaultFitness = {
         steps: 0,
@@ -40,6 +44,19 @@ export default function FitnessTracker({ data, onUpdateSteps }: FitnessTrackerPr
 
     const [startColor, endColor] = getGradientColors();
 
+    const handleSync = async () => {
+        if (!onSyncGoogleFit || isSyncing) return;
+
+        setIsSyncing(true);
+        try {
+            await onSyncGoogleFit();
+        } catch (error) {
+            console.error("Sync failed:", error);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     return (
         <div
             className="p-6 rounded-2xl shadow-sm"
@@ -50,13 +67,37 @@ export default function FitnessTracker({ data, onUpdateSteps }: FitnessTrackerPr
                     <span className="text-2xl">🏃</span>
                     Fitness Today
                 </h3>
-                <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-2">
                     <span
-                        className="px-2 py-1 rounded-full font-medium"
+                        className="px-2 py-1 rounded-full font-medium text-xs"
                         style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}
                     >
                         Google Fit ✓
                     </span>
+                    {onSyncGoogleFit && (
+                        <button
+                            onClick={handleSync}
+                            disabled={isSyncing}
+                            className="px-3 py-1 rounded-lg text-xs font-medium transition-all hover:scale-105 disabled:opacity-50"
+                            style={{
+                                background: "var(--primary)",
+                                color: "white",
+                                opacity: isSyncing ? 0.5 : 1
+                            }}
+                        >
+                            {isSyncing ? (
+                                <span className="flex items-center gap-1">
+                                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                    Syncing...
+                                </span>
+                            ) : (
+                                "🔄 Sync"
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
 

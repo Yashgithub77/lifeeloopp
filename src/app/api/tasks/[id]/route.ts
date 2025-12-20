@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { store } from "@/data/store";
 
 export async function PATCH(
     req: NextRequest,
@@ -10,11 +10,9 @@ export async function PATCH(
         const body = await req.json();
         const { status, actualMinutes, notes } = body;
 
-        // Find the task
-        const task = await prisma.task.findUnique({
-            where: { id },
-            include: { goal: true },
-        });
+        // Get current tasks from store
+        const tasks = store.getTasks();
+        const task = tasks.find(t => t.id === id);
 
         if (!task) {
             return NextResponse.json(
@@ -23,75 +21,56 @@ export async function PATCH(
             );
         }
 
-        // Update task
-        const updateData: {
-            status?: string;
-            actualMinutes?: number;
-            notes?: string;
-            completedAt?: Date | null;
-        } = {};
+        // Update the task
+        const updatedTask = {
+            ...task,
+            ...(status !== undefined && { status }),
+            ...(actualMinutes !== undefined && { actualMinutes }),
+            ...(notes !== undefined && { notes }),
+            ...(status === "done" && { completedAt: new Date().toISOString() }),
+            ...(status === "pending" && { completedAt: undefined }),
+        };
 
-        if (status !== undefined) {
-            updateData.status = status;
-            if (status === "done") {
-                updateData.completedAt = new Date();
-            } else if (status === "pending") {
-                updateData.completedAt = null;
+        // Update tasks in store
+        const updatedTasks = tasks.map(t => t.id === id ? updatedTask : t);
+        store.setTasks(updatedTasks);
+
+        // If task completed, update goal progress
+        if (status === "done") {
+            const goals = store.getGoals();
+            const goal = goals.find(g => g.id === task.goalId);
+
+            if (goal) {
+                const completedTasksCount = updatedTasks.filter(
+                    t => t.goalId === task.goalId && t.status === "done"
+                ).length;
+
+                const updatedGoal = {
+                    ...goal,
+                    currentValue: completedTasksCount,
+                };
+
+                const updatedGoals = goals.map(g => g.id === goal.id ? updatedGoal : g);
+                store.goals = updatedGoals;
             }
         }
 
-        if (actualMinutes !== undefined) {
-            updateData.actualMinutes = actualMinutes;
-        }
-
-        if (notes !== undefined) {
-            updateData.notes = notes;
-        }
-
-        const updatedTask = await prisma.task.update({
-            where: { id },
-            data: updateData,
-        });
-
-        // If task completed, update goal progress
-        if (status === "done" && task.goal) {
-            const completedTasksCount = await prisma.task.count({
-                where: {
-                    goalId: task.goalId,
-                    status: "done",
-                },
-            });
-
-            // Update goal's current value based on completed tasks
-            await prisma.goal.update({
-                where: { id: task.goalId },
-                data: {
-                    currentValue: completedTasksCount,
-                },
-            });
-        }
-
         // Log agent action
-        await prisma.agentAction.create({
-            data: {
-                userId: task.userId,
-                type: "check_progress",
-                title: status === "done" ? "Task Completed" : "Task Updated",
-                description: `Task "${task.title}" marked as ${status}`,
-                status: "completed",
-                duration: 100,
-            },
+        store.addAgentAction({
+            id: `action-${Date.now()}`,
+            type: "check_progress",
+            title: status === "done" ? "Task Completed" : "Task Updated",
+            description: `Task "${task.title}" marked as ${status}`,
+            status: "completed",
+            progress: 100,
+            createdAt: new Date().toISOString(),
+            duration: 100,
         });
 
         return NextResponse.json({
             success: true,
-            task: {
-                ...updatedTask,
-                scheduledDate: updatedTask.scheduledDate.toISOString(),
-                completedAt: updatedTask.completedAt?.toISOString() ?? null,
-                createdAt: updatedTask.createdAt.toISOString(),
-                updatedAt: updatedTask.updatedAt.toISOString(),
-            },
+            task: updatedTask,
+            goals: store.getGoals(),
         });
     } catch (error) {
         console.error("Error updating task:", error);
