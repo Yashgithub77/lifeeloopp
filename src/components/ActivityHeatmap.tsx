@@ -121,7 +121,6 @@ export default function ActivityHeatmap({ tasks }: ActivityHeatmapProps) {
                                     className="w-3 h-3 rounded-sm cursor-pointer transition-all hover:scale-125 hover:ring-2 hover:ring-offset-1"
                                     style={{
                                         background: getColorForCount(day.count),
-                                        ringColor: "var(--primary)",
                                     }}
                                     title={`${day.label}: ${day.count} tasks`}
                                 />
