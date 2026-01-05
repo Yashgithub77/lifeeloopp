@@ -43,15 +43,6 @@ LifeLoop is an intelligent life planning application that combines goal tracking
 - Fullscreen modes for immersive experiences
 - Customizable timers and routines
 
-### 🎨 **Modern UI/UX**
-- Beautiful dark theme with gradient accents
-- Glassmorphism design elements
-- Smooth animations and transitions
-- Fully responsive design
-- Animated login experience
-
----
-
 ## 🚀 Getting Started
 
 ### Prerequisites
