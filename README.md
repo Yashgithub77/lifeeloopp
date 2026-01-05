@@ -1,4 +1,4 @@
-# 🌀 LifeLoop
+#  LifeLoop
 
 **Your AI-Powered Life Planning Companion**
 
