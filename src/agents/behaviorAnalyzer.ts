@@ -1,4 +1,4 @@
-// Behavior Analysis Agent - Updated for Vercel deployment
+
 import { Task, BehaviorPattern, DailyInsight, FitnessData, AgentAction } from "@/types";
 import { store } from "@/data/store";
 
