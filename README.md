@@ -287,19 +287,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Google Gemini AI for intelligent insights
 - Next.js team for the amazing framework
 - Tailwind CSS for beautiful styling
 - NextAuth.js for authentication
 
----
 
-## 📧 Contact
-
-For questions or support, please open an issue on GitHub.
-
----
-
-**Built with ❤️ for productivity and wellness**
